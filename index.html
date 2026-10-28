@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#166534">
+<title>Money Manager</title>
+<style>
+:root{--green:#166534;--bg:#f4f7f4;--ink:#15231a;--muted:#647067;--card:#fff;--line:#e0e8e1}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font:16px system-ui,-apple-system,sans-serif;color:var(--ink)}
+header{background:var(--green);color:#fff;padding:18px 16px 22px;border-radius:0 0 22px 22px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:8px}h1{font-size:22px;margin:0}header p{margin:4px 0 0;opacity:.85;font-size:13px}
+button,select,input{font:inherit}button{border:0;border-radius:12px;padding:11px 14px;cursor:pointer}
+.lang{background:#fff;color:var(--green);font-weight:700;padding:8px 10px}
+main{max-width:760px;margin:auto;padding:14px}
+.balance{background:#fff;border-radius:18px;padding:18px;box-shadow:0 3px 14px #102b1010}
+.small{font-size:12px;color:var(--muted);letter-spacing:.04em}.amount{font-size:30px;font-weight:800;margin:4px 0 12px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}
+.tile,.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}
+.tile .emoji{font-size:23px;display:block;margin-bottom:5px}.tile span.label{display:block;color:var(--muted);font-size:12px}.tile strong{display:block;font-size:18px;margin-top:5px;overflow-wrap:anywhere}
+h2{font-size:17px;margin:20px 2px 10px}.panel{margin-bottom:12px}
+form{display:grid;gap:10px}label{font-size:12px;color:var(--muted);display:grid;gap:5px}
+input,select{width:100%;border:1px solid var(--line);border-radius:10px;padding:11px;background:#fff;color:var(--ink)}
+.primary{background:var(--green);color:white;font-weight:700}.secondary{background:#e8f2e9;color:var(--green);font-weight:700}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.filters{display:flex;gap:7px;flex-wrap:wrap}.filters button{background:#e8eee9;color:var(--ink);padding:8px 11px}.filters button.active{background:var(--green);color:#fff}
+.tx{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line)}.tx:last-child{border-bottom:0}.tx strong{display:block}.meta{font-size:12px;color:var(--muted);margin-top:3px}.money{font-weight:800;white-space:nowrap}.empty{color:var(--muted);text-align:center;padding:20px 0;font-size:14px}
+.tools{display:flex;gap:8px;flex-wrap:wrap}.tools button{flex:1;min-width:130px}footer{color:var(--muted);font-size:11px;text-align:center;padding:18px 8px}
+@media(min-width:560px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+</style></head>
+<body>
+<header><div class="top"><div><h1 id="appTitle">Money Manager</h1><p id="subtitle">Track your money simply</p></div><button class="lang" id="langBtn">हिंदी</button></div></header>
+<main>
+<section class="balance"><div class="small" id="balanceLabel">ESTIMATED CASH BALANCE</div><div class="amount" id="balance">₹0.00</div><div class="row"><div><div class="small" id="incomeLabel">TOTAL INCOME</div><strong id="income">₹0.00</strong></div><div><div class="small" id="expenseLabel">TOTAL EXPENSES</div><strong id="expense">₹0.00</strong></div></div><p class="meta" id="balanceHint">Balance = income + borrowed − expenses − lent − investments</p></section>
+<div class="grid">
+<div class="tile"><span class="emoji">💰</span><span class="label" id="borrowLabel">Money borrowed</span><strong id="borrow">₹0</strong></div>
+<div class="tile"><span class="emoji">🤝</span><span class="label" id="lentLabel">Money lent</span><strong id="lent">₹0</strong></div>
+<div class="tile"><span class="emoji">💵</span><span class="label" id="salaryLabel">Salary / income</span><strong id="salary">₹0</strong></div>
+<div class="tile"><span class="emoji">📈</span><span class="label" id="investLabel">Investments</span><strong id="invest">₹0</strong></div>
+<div class="tile"><span class="emoji">🧾</span><span class="label" id="dailyLabel">Daily expenses</span><strong id="daily">₹0</strong></div>
+<div class="tile"><span class="emoji">🏦</span><span class="label" id="netLabel">Net after lending</span><strong id="net">₹0</strong></div>
+</div>
+<h2 id="addHeading">Add transaction</h2>
+<section class="panel"><form id="txForm">
+<label><span id="descLabel">Description / purpose</span><input id="desc" required maxlength="100" placeholder="e.g. Grocery, salary"></label>
+<div class="row"><label><span id="amountLabel">Amount (₹)</span><input id="amountInput" type="number" min="0.01" step="0.01" required inputmode="decimal" placeholder="0.00"></label><label><span id="categoryLabel">Category</span><select id="category"></select></label></div>
+<div class="row"><label><span id="paymentLabel">Payment method</span><select id="payment"></select></label><label><span id="personLabel">Person / party (optional)</span><input id="person" maxlength="80" placeholder="Name"></label></div>
+<label><span id="dateLabel">Date</span><input id="date" type="date" required></label>
+<button class="primary" type="submit" id="saveBtn">Save transaction</button>
+</form></section>
+<h2 id="historyHeading">Transaction history</h2><div class="filters" id="filters"></div>
+<section class="panel" id="transactions"><div class="empty" id="empty">No transactions yet.</div></section>
+<h2 id="backupHeading">Backup & restore</h2><section class="panel"><div class="tools"><button class="secondary" id="exportBtn">Export backup</button><label class="secondary" style="text-align:center;border-radius:12px;padding:11px 14px;font-weight:700;cursor:pointer"><span id="importLabel">Import backup</span><input id="importFile" type="file" accept="application/json,.json" hidden></label></div><p class="meta" id="backupNote">Export a copy of your records and keep it somewhere safe. Import replaces the current records.</p></section>
+<footer id="note">Saved in this browser on this device. Payment methods only record transactions; they do not send money.</footer>
+</main>
+<script>
+const CATS=[
+{en:"Salary / Income",hi:"वेतन / आय",icon:"💵",kind:"income"},
+{en:"Daily expense",hi:"रोज़ाना का खर्च",icon:"🧾",kind:"expense"},
+{en:"Money borrowed",hi:"उधार लिया",icon:"💰",kind:"borrow"},
+{en:"Money lent",hi:"उधार दिया",icon:"🤝",kind:"lent"},
+{en:"Investment",hi:"निवेश",icon:"📈",kind:"invest"},
+{en:"Other",hi:"अन्य",icon:"📌",kind:"other"}
+];
+const PAYMENTS=[
+{en:"Cash",hi:"नकद",icon:"💵"},{en:"PhonePe",hi:"PhonePe",icon:"🟣"},
+{en:"Google Pay",hi:"Google Pay",icon:"🔵"},{en:"Paytm",hi:"Paytm",icon:"🔷"},
+{en:"Bank transfer",hi:"बैंक ट्रांसफर",icon:"🏦"},{en:"Debit/Credit card",hi:"डेबिट/क्रेडिट कार्ड",icon:"💳"},
+{en:"Other",hi:"अन्य",icon:"📲"}
+];
+const T={
+en:{subtitle:"Track your money simply",balanceLabel:"ESTIMATED CASH BALANCE",incomeLabel:"TOTAL INCOME",expenseLabel:"TOTAL EXPENSES",borrow:"Money borrowed",lent:"Money lent",salary:"Salary / income",invest:"Investments",daily:"Daily expenses",net:"Net after lending",balanceHint:"Balance = income + borrowed − expenses − lent − investments",addHeading:"Add transaction",descLabel:"Description / purpose",amountLabel:"Amount (₹)",categoryLabel:"Category",paymentLabel:"Payment method",personLabel:"Person / party (optional)",dateLabel:"Date",saveBtn:"Save transaction",historyHeading:"Transaction history",empty:"No transactions yet.",backupHeading:"Backup & restore",exportBtn:"Export backup",importLabel:"Import backup",backupNote:"Export a copy of your records and keep it somewhere safe. Import replaces the current records.",note:"Saved in this browser on this device. Payment methods only record transactions; they do not send money.",filters:["All","Income","Expense","Money borrowed","Money lent","Investment","Other"],del:"Delete",confirm:"Delete this transaction?",saved:"Transaction saved.",badFile:"This backup file is invalid.",importConfirm:"Importing will replace your current transactions. Continue?",imported:"Backup imported."},
+hi:{subtitle:"अपने पैसों का हिसाब आसानी से रखें",balanceLabel:"अनुमानित नकद बैलेंस",incomeLabel:"कुल आय",expenseLabel:"कुल खर्च",borrow:"उधार लिया",lent:"उधार दिया",salary:"वेतन / आय",invest:"निवेश",daily:"रोज़ाना खर्च",net:"उधार देने के बाद",balanceHint:"बैलेंस = आय + उधार लिया − खर्च − उधार दिया − निवेश",addHeading:"लेन-देन जोड़ें",descLabel:"विवरण / किस लिए",amountLabel:"राशि (₹)",categoryLabel:"श्रेणी",paymentLabel:"भुगतान का तरीका",personLabel:"व्यक्ति / पार्टी (वैकल्पिक)",dateLabel:"तारीख",saveBtn:"लेन-देन सेव करें",historyHeading:"लेन-देन का इतिहास",empty:"अभी कोई लेन-देन नहीं है।",backupHeading:"बैकअप और वापस लाएँ",exportBtn:"बैकअप डाउनलोड करें",importLabel:"बैकअप वापस लाएँ",backupNote:"अपने रिकॉर्ड की कॉपी डाउनलोड करके सुरक्षित रखें। बैकअप वापस लाने पर मौजूदा रिकॉर्ड बदल जाएँगे।",note:"डेटा इसी डिवाइस के ब्राउज़र में सेव होता है। भुगतान के तरीके केवल रिकॉर्ड के लिए हैं; पैसे नहीं भेजते।",filters:["सभी","आय","खर्च","उधार लिया","उधार दिया","निवेश","अन्य"],del:"हटाएँ",confirm:"क्या आप यह लेन-देन हटाना चाहते हैं?",saved:"लेन-देन सेव हो गया।",badFile:"यह बैकअप फ़ाइल सही नहीं है।",importConfirm:"बैकअप लाने से मौजूदा रिकॉर्ड बदल जाएँगे। जारी रखें?",imported:"बैकअप वापस आ गया।"}
+};
+let lang=localStorage.getItem("mm_lang")||"en";
+if(!T[lang])lang="en";
+let txs=[];try{const parsed=JSON.parse(localStorage.getItem("mm_txs")||"[]");if(Array.isArray(parsed))txs=parsed.filter(t=>t&&typeof t.desc==="string"&&Number.isFinite(Number(t.amount))&&CATS.some(c=>c.en===t.category));}catch(e){txs=[]}
+let filter=0;
+const $=id=>document.getElementById(id);
+const money=n=>new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR",maximumFractionDigits:2}).format(Number(n)||0);
+const tr=k=>T[lang][k]||T.en[k]||k;
+const catOf=t=>CATS.find(c=>c.en===t.category)||CATS[5];
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function buildSelects(){
+ $("category").innerHTML=CATS.map(c=>`<option value="${esc(c.en)}">${c.icon} ${esc(c[lang])}</option>`).join("");
+ $("payment").innerHTML=PAYMENTS.map(p=>`<option value="${esc(p.en)}">${p.icon} ${esc(p[lang])}</option>`).join("");
+ $("filters").innerHTML=T[lang].filters.map((x,i)=>`<button type="button" data-filter="${i}" class="${filter===i?'active':''}">${esc(x)}</button>`).join("");
+}
+function setText(){
+ ["subtitle","balanceLabel","incomeLabel","expenseLabel","balanceHint","addHeading","descLabel","amountLabel","categoryLabel","paymentLabel","personLabel","dateLabel","saveBtn","historyHeading","empty","backupHeading","exportBtn","importLabel","backupNote","note"].forEach(id=>$(id).textContent=tr(id));
+ ["borrow","lent","salary","invest","daily","net"].forEach(k=>$(k+"Label").textContent=tr(k));
+ $("langBtn").textContent=lang==="en"?"हिंदी":"English";$("appTitle").textContent="Money Manager";
+}
+function totals(){
+ const sum=kind=>txs.filter(t=>catOf(t).kind===kind).reduce((a,t)=>a+Number(t.amount),0);
+ const income=sum("income"),expense=sum("expense"),borrow=sum("borrow"),lent=sum("lent"),invest=sum("invest"),other= sum("other");
+ // Cash estimate: income and borrowed add cash; expenses, lending, investments subtract cash.
+ const balance=income+borrow-expense-lent-invest;
+ $("income").textContent=money(income);$("expense").textContent=money(expense);$("balance").textContent=money(balance);
+ $("borrow").textContent=money(borrow);$("lent").textContent=money(lent);$("salary").textContent=money(income);$("invest").textContent=money(invest);$("daily").textContent=money(expense);$("net").textContent=money(balance);
+}
+function render(){
+ setText();buildSelects();totals();
+ const kinds=["all","income","expense","borrow","lent","invest","other"];
+ const list=txs.filter(t=>filter===0||catOf(t).kind===kinds[filter]).sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+ const root=$("transactions");
+ if(!list.length){root.innerHTML=`<div class="empty">${tr("empty")}</div>`;return}
+ root.innerHTML=list.map(t=>{const c=catOf(t),p=PAYMENTS.find(x=>x.en===t.payment)||PAYMENTS[6];return `<div class="tx"><div><strong>${c.icon} ${esc(t.desc)}</strong><div class="meta">${esc(c[lang])} · ${esc(t.date||"")}${t.person?' · '+esc(t.person):''} · ${p.icon} ${esc(p[lang])}</div></div><div style="text-align:right"><div class="money">${money(t.amount)}</div><button type="button" class="secondary" data-delete="${esc(t.id)}" style="padding:5px 8px;margin-top:5px;font-size:12px">${tr("del")}</button></div></div>`}).join("");
+}
+$("date").value=new Date().toLocaleDateString("en-CA");
+$("langBtn").onclick=()=>{lang=lang==="en"?"hi":"en";localStorage.setItem("mm_lang",lang);render()};
+$("filters").onclick=e=>{const b=e.target.closest("[data-filter]");if(b){filter=Number(b.dataset.filter);render()}};
+$("transactions").onclick=e=>{const b=e.target.closest("[data-delete]");if(b&&confirm(tr("confirm"))){txs=txs.filter(t=>String(t.id)!==b.dataset.delete);localStorage.setItem("mm_txs",JSON.stringify(txs));render()}};
+$("txForm").onsubmit=e=>{e.preventDefault();const amount=Number($("amountInput").value),desc=$("desc").value.trim();if(!desc||!Number.isFinite(amount)||amount<=0)return;txs.push({id:(Date.now().toString()+Math.random().toString(36).slice(2,7)),desc,amount,category:$("category").value,payment:$("payment").value,person:$("person").value.trim(),date:$("date").value});localStorage.setItem("mm_txs",JSON.stringify(txs));e.target.reset();$("date").value=new Date().toLocaleDateString("en-CA");render();alert(tr("saved"))};
+$("exportBtn").onclick=()=>{const blob=new Blob([JSON.stringify({app:"Money Manager",version:1,transactions:txs},null,2)],{type:"application/json"});const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="MoneyManager-backup.json";a.click();URL.revokeObjectURL(url)};
+$("importFile").onchange=async e=>{const file=e.target.files[0];if(!file)return;try{const data=JSON.parse(await file.text()),items=Array.isArray(data)?data:data.transactions;if(!Array.isArray(items)||!items.every(t=>t&&typeof t.desc==="string"&&Number.isFinite(Number(t.amount))&&Number(t.amount)>0&&CATS.some(c=>c.en===t.category)))throw Error("invalid");if(!confirm(tr("importConfirm")))return;txs=items.map(t=>({...t,amount:Number(t.amount),id:String(t.id||Date.now()+Math.random())}));localStorage.setItem("mm_txs",JSON.stringify(txs));render();alert(tr("imported"))}catch(err){alert(tr("badFile"))}finally{e.target.value=""}};
+render();
+</script></body></html>
